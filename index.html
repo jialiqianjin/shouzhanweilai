@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>寿术回战</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    background:#08070c;color:#f0f0f5;overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    position:relative;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 15% 15%, rgba(230,57,70,.20), transparent 42%),
+      radial-gradient(circle at 85% 85%, rgba(255,209,102,.10), transparent 45%),
+      radial-gradient(circle at 72% 8%, rgba(120,60,255,.10), transparent 40%);
+  }
+  .screen{
+    position:fixed;inset:0;z-index:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;
+    opacity:0;visibility:hidden;transform:scale(1.06);
+    transition:
+      opacity .45s cubic-bezier(.4,0,.2,1),
+      transform .45s cubic-bezier(.4,0,.2,1),
+      visibility .45s;
+    pointer-events:none;
+  }
+  .screen.active{
+    opacity:1;visibility:visible;transform:scale(1);z-index:2;
+    pointer-events:auto;
+  }
+  .logo{
+    font-size:clamp(42px,12vw,84px);
+    font-weight:900;letter-spacing:.12em;
+    background:linear-gradient(180deg,#ffffff 0%,#ffd166 55%,#e63946 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 26px rgba(230,57,70,.45));
+    line-height:1.15;
+  }
+  .logo.big{font-size:clamp(46px,13vw,92px);}
+  .subtitle{
+    color:#9a9aab;font-size:clamp(13px,3.6vw,16px);
+    letter-spacing:.28em;margin-top:4px;
+  }
+  .subtitle .ai-name{color:#ff8a8a;}
+  .btn{
+    border:none;border-radius:16px;
+    padding:16px 46px;
+    font-family:inherit;font-size:17px;font-weight:700;letter-spacing:.1em;
+    cursor:pointer;touch-action:manipulation;
+    transition:transform .16s ease, box-shadow .2s ease, background .2s ease, opacity .2s;
+  }
+  .btn.primary{
+    background:linear-gradient(135deg,#e63946,#ff6b6b);
+    color:#fff;
+    box-shadow:0 10px 28px rgba(230,57,70,.38);
+  }
+  .btn.primary:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(230,57,70,.52);}
+  .btn.primary:active{transform:translateY(0) scale(.96);}
+  .btn.primary:disabled{opacity:.5;cursor:default;transform:none;box-shadow:0 10px 28px rgba(230,57,70,.2);}
+  .btn.ghost{
+    background:rgba(255,255,255,.06);color:#d6d6e0;
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .btn.ghost:hover{background:rgba(255,255,255,.12);}
+  .btn.ghost:active{transform:scale(.96);}
+  .btn.small{padding:11px 30px;font-size:14px;border-radius:12px;}
+  .btn.danger{
+    color:#ff8a8a;border-color:rgba(230,57,70,.45);
+    background:rgba(230,57,70,.10);
+  }
+  .btn.danger:hover{background:rgba(230,57,70,.20);}
+  .card{
+    width:min(560px,100%);
+    background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:26px;
+    padding:34px 26px 30px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 26px 70px rgba(0,0,0,.55);
+    display:flex;flex-direction:column;align-items:center;gap:18px;
+    text-align:center;
+    animation:cardIn .7s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(26px) scale(.97);}
+    to{opacity:1;transform:none;}
+  }
+  .rules{display:flex;flex-direction:column;gap:11px;width:100%;margin:2px 0;}
+  .rule{
+    display:flex;align-items:center;gap:14px;text-align:left;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.055);
+    border-radius:14px;padding:12px 16px;
+    font-size:14.5px;line-height:1.55;color:#c6c6d3;
+    transition:background .25s,transform .25s;
+  }
+  .rule:hover{background:rgba(230,57,70,.12);transform:translateX(4px);}
+  .rule i{
+    font-style:normal;flex:0 0 auto;
+    color:#e63946;font-weight:900;font-size:15px;
+    width:22px;text-align:center;
+  }
+  .rule b{color:#ffd166;}
+  #screen-menu{gap:20px;}
+  .menu-btns{display:flex;flex-direction:column;gap:14px;width:min(300px,80vw);margin-top:4px;}
+  .menu-btns .btn{width:100%;}
+  .name-editor{
+    width:min(300px,80vw);
+    display:flex;flex-direction:column;gap:8px;
+    margin-top:6px;
+  }
+  .name-editor .ne-label{
+    font-size:12px;letter-spacing:.22em;color:#8a8a9c;text-align:center;
+  }
+  .name-row{display:flex;gap:8px;}
+  .name-row input{
+    flex:1;min-width:0;
+    padding:12px 14px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    color:#fff;font-size:14px;font-family:inherit;outline:none;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .name-row input:focus{border-color:#e63946;box-shadow:0 0 0 3px rgba(230,57,70,.18);}
+  .name-row input::placeholder{color:#5f5f74;}
+  .name-row .btn{flex:0 0 auto;padding:12px 20px;font-size:13px;border-radius:12px;}
+  .dev-badge{
+    margin-top:6px;
+    font-size:12px;letter-spacing:.16em;color:#ffd166;
+    border:1px dashed rgba(255,209,102,.45);
+    border-radius:999px;padding:6px 16px;
+    display:none;
+  }
+  .dev-badge.show{display:block;animation:cardIn .5s both;}
+  #screen-game, #screen-netgame{
+    justify-content:space-between;
+    padding:26px 22px 30px;
+    gap:8px;
+  }
+  .game-top{width:min(560px,100%);display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .timer{
+    display:flex;align-items:baseline;gap:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .timer #timer-val, .timer #net-timer-val{
+    font-size:clamp(34px,10vw,46px);font-weight:900;color:#ffd166;
+    text-shadow:0 0 24px rgba(255,209,102,.4);
+    letter-spacing:.02em;
+  }
+  .timer .unit{font-size:14px;color:#8a8a9c;letter-spacing:.2em;}
+  .bar{
+    width:100%;height:7px;border-radius:999px;
+    background:rgba(255,255,255,.09);overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;width:100%;border-radius:999px;
+    background:linear-gradient(90deg,#ffd166,#e63946);
+    transition:width .1s linear;
+    box-shadow:0 0 16px rgba(230,57,70,.7);
+  }
+  .scoreboard{
+    width:min(560px,100%);
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:20px;padding:14px 18px;
+  }
+  .side{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;}
+  .side .who{
+    font-size:13px;letter-spacing:.18em;color:#8a8a9c;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .side.ai .who{color:#ff8a8a;}
+  .side .val{
+    font-size:clamp(30px,9vw,42px);font-weight:900;line-height:1.1;
+    font-variant-numeric:tabular-nums;
+  }
+  .side.ai .val{color:#ff8a8a;}
+  .vs{
+    font-size:13px;font-weight:900;letter-spacing:.1em;color:#55556a;
+    padding:0 6px;
+  }
+  .val.pop{animation:numPop .3s ease-out;}
+  @keyframes numPop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.32);color:#ffd166;}
+    100%{transform:scale(1);}
+  }
+  .borrow-btn{
+    position:relative;
+    width:min(58vw,250px);
+    aspect-ratio:1/1;
+    border:none;border-radius:50%;
+    font-family:inherit;color:#fff;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:4px;
+    touch-action:manipulation;
+    background:radial-gradient(circle at 34% 28%,#ff9a9a 0%,#e63946 52%,#9d1216 100%);
+    animation:pulseGlow 2.2s ease-in-out infinite;
+    transition:transform .07s ease, background .25s ease, filter .25s ease, box-shadow .25s ease;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .borrow-btn::after{
+    content:"";position:absolute;inset:9px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.22);pointer-events:none;
+    transition:border-color .25s ease;
+  }
+  .borrow-btn:active{transform:scale(.93);}
+  .borrow-main{font-size:clamp(32px,9.5vw,48px);font-weight:900;letter-spacing:.14em;}
+  .borrow-sub{font-size:12.5px;letter-spacing:.22em;opacity:.85;}
+  @keyframes pulseGlow{
+    0%,100%{box-shadow:0 0 0 7px rgba(230,57,70,.12),0 0 48px rgba(230,57,70,.35),inset 0 -10px 26px rgba(0,0,0,.35);}
+    50%{box-shadow:0 0 0 16px rgba(230,57,70,.05),0 0 82px rgba(230,57,70,.55),inset 0 -10px 26px rgba(0,0,0,.35);}
+  }
+  .borrow-btn.disabled-by-dev{
+    background:radial-gradient(circle at 34% 28%,#6b6b74 0%,#3c3c45 52%,#222228 100%);
+    animation:none;
+    cursor:not-allowed;
+    filter:grayscale(1) brightness(.72);
+    box-shadow:0 0 0 7px rgba(255,255,255,.05),inset 0 -10px 26px rgba(0,0,0,.42);
+  }
+  .borrow-btn.disabled-by-dev::after{border-color:rgba(255,255,255,.10);}
+  .borrow-btn.disabled-by-dev:active{transform:none;}
+  .borrow-btn.disabled-by-dev .borrow-sub{opacity:.55;}
+  .game-bottom{display:flex;justify-content:center;gap:12px;min-height:44px;}
+  .float-plus{
+    position:fixed;z-index:60;pointer-events:none;
+    font-weight:900;font-size:21px;color:#ffd166;
+    text-shadow:0 0 14px rgba(255,209,102,.8);
+    animation:floatUp .8s cubic-bezier(.2,.8,.3,1) forwards;
+  }
+  @keyframes floatUp{
+    0%{transform:translate(-50%,0) scale(.7);opacity:0;}
+    22%{transform:translate(-50%,-14px) scale(1.15);opacity:1;}
+    100%{transform:translate(-50%,-96px) scale(.95);opacity:0;}
+  }
+  .countdown-overlay{
+    position:absolute;inset:0;z-index:40;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(5,4,9,.62);
+    backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .3s ease, visibility .3s;
+  }
+  .countdown-overlay.active{
+    opacity:1;visibility:visible;pointer-events:auto;
+  }
+  .countdown-inner{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .countdown-num{
+    font-size:clamp(110px,30vw,190px);
+    font-weight:900;line-height:1;
+    color:#ffd166;
+    text-shadow:0 0 70px rgba(255,209,102,.65);
+    animation:countPop 1s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes countPop{
+    0%{transform:scale(2.1);opacity:0;}
+    28%{transform:scale(1);opacity:1;}
+    78%{transform:scale(1);opacity:1;}
+    100%{transform:scale(.72);opacity:0;}
+  }
+  .countdown-tip{
+    font-size:13px;letter-spacing:.42em;color:#a5a5b8;
+    text-indent:.42em;
+  }
+  .timeup-overlay{
+    position:absolute;inset:0;z-index:30;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;
+    background:rgba(5,4,9,.55);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .35s ease, visibility .35s;
+  }
+  .timeup-overlay.active{
+    opacity:1;visibility:visible;pointer-events:auto;
+  }
+  .timeup-text{
+    font-size:clamp(46px,13vw,96px);
+    font-weight:900;letter-spacing:.16em;
+    color:#ffd166;
+    text-shadow:0 0 46px rgba(255,209,102,.65),0 0 100px rgba(230,57,70,.4);
+    text-indent:.16em;
+    animation:timeUpPop .55s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes timeUpPop{
+    0%{transform:scale(1.7);opacity:0;filter:blur(12px);}
+    100%{transform:scale(1);opacity:1;filter:blur(0);}
+  }
+  .timeup-sub{
+    font-size:13px;letter-spacing:.5em;color:#a5a5b8;
+    text-indent:.5em;
+    animation:timeUpSub .8s ease-out both .12s;
+  }
+  @keyframes timeUpSub{
+    from{opacity:0;transform:translateY(8px);}
+    to{opacity:1;transform:none;}
+  }
+  .overlay{
+    position:absolute;inset:0;z-index:20;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    background:rgba(5,4,9,.82);
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    opacity:0;visibility:hidden;
+    transition:opacity .3s ease, visibility .3s;
+  }
+  .overlay.active{opacity:1;visibility:visible;}
+  .overlay .box{
+    width:min(420px,100%);
+    background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:22px;padding:30px 24px;
+    text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+    transform:translateY(14px) scale(.97);
+    transition:transform .35s cubic-bezier(.2,.9,.25,1);
+  }
+  .overlay.active .box{transform:none;}
+  .overlay h2{font-size:26px;letter-spacing:.12em;font-weight:900;}
+  .muted{color:#8f8fa2;font-size:14px;line-height:1.6;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+  .row .btn{padding:13px 28px;font-size:15px;}
+  h2.win{color:#ffd166;text-shadow:0 0 26px rgba(255,209,102,.5);}
+  h2.lose{color:#e63946;text-shadow:0 0 26px rgba(230,57,70,.5);}
+  .result-scores{
+    display:flex;align-items:center;justify-content:center;gap:22px;
+    width:100%;padding:8px 0;
+  }
+  .rs{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;}
+  .rs .lbl{font-size:12px;letter-spacing:.16em;color:#8f8fa2;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rs .v{font-size:32px;font-weight:900;font-variant-numeric:tabular-nums;}
+  .vs-mini{font-size:12px;font-weight:900;color:#55556a;letter-spacing:.1em;}
+  .modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    background:rgba(5,4,9,.85);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;visibility:hidden;
+    transition:opacity .28s ease, visibility .28s;
+  }
+  .modal-overlay.active{opacity:1;visibility:visible;}
+  .modal{
+    width:min(400px,100%);
+    background:linear-gradient(160deg,#1b1a24,#121118);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:22px;padding:28px 24px;
+    display:flex;flex-direction:column;gap:14px;
+    text-align:center;
+    box-shadow:0 26px 70px rgba(0,0,0,.7);
+    transform:translateY(14px) scale(.96);
+    transition:transform .35s cubic-bezier(.2,.9,.25,1);
+  }
+  .modal-overlay.active .modal{transform:none;}
+  .modal h2{font-size:22px;letter-spacing:.1em;font-weight:900;}
+  .modal p{font-size:14px;color:#a5a5b8;line-height:1.6;}
+  .modal p b{color:#ffd166;}
+  .modal p .version{
+    color:#7ee0a8;font-weight:900;letter-spacing:.12em;
+  }
+  .modal .author{
+    color:#ffffff;font-weight:900;cursor:pointer;
+    padding:2px 6px;border-radius:6px;
+    display:inline-block;
+    transition:transform .12s ease, background .2s, color .2s;
+  }
+  .modal .author:hover{background:rgba(255,255,255,.12);}
+  .modal .author.tap{transform:scale(1.22);}
+  .modal input{
+    width:100%;padding:13px 16px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.05);
+    color:#fff;font-size:15px;font-family:inherit;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .modal input:focus{border-color:#e63946;box-shadow:0 0 0 3px rgba(230,57,70,.18);}
+  .modal input::placeholder{color:#5f5f74;}
+  .modal label{
+    display:flex;flex-direction:column;gap:8px;
+    font-size:13px;color:#8f8fa2;letter-spacing:.08em;text-align:left;
+  }
+  .modal-actions{display:flex;gap:12px;justify-content:center;margin-top:6px;flex-wrap:wrap;}
+  .modal-actions .btn{padding:12px 28px;font-size:15px;}
+  .error{color:#ff6b6b;font-size:13px;min-height:18px;}
+  .dev-note{
+    font-size:12.5px;color:#ffd166;line-height:1.65;
+    background:rgba(255,209,102,.08);
+    border:1px dashed rgba(255,209,102,.35);
+    border-radius:12px;padding:10px 12px;
+    text-align:left;
+  }
+  #screen-lobby{
+    gap:14px;
+    overflow-y:auto;
+  }
+  .lobby-card{
+    width:min(460px,100%);
+    background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:24px;
+    padding:24px 22px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 26px 70px rgba(0,0,0,.55);
+    display:flex;flex-direction:column;gap:14px;
+    text-align:center;
+    animation:cardIn .6s cubic-bezier(.2,.9,.25,1) both;
+  }
+  .lobby-title{
+    font-size:clamp(24px,7vw,34px);font-weight:900;letter-spacing:.1em;
+    background:linear-gradient(180deg,#fff,#ffd166 60%,#e63946);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lobby-label{
+    font-size:12px;letter-spacing:.22em;color:#8a8a9c;text-align:left;
+  }
+  .lobby-input-row{display:flex;gap:8px;}
+  .lobby-input-row input{
+    flex:1;min-width:0;
+    padding:13px 14px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    color:#fff;font-size:15px;font-family:inherit;outline:none;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .lobby-input-row input:focus{border-color:#e63946;box-shadow:0 0 0 3px rgba(230,57,70,.18);}
+  .lobby-input-row input::placeholder{color:#5f5f74;}
+  .lobby-input-row .btn{flex:0 0 auto;padding:13px 20px;font-size:14px;border-radius:12px;}
+  .join-code-card{
+    background:linear-gradient(160deg,rgba(255,209,102,.16),rgba(230,57,70,.10));
+    border:1.5px solid rgba(255,209,102,.55);
+    border-radius:18px;
+    padding:16px 14px;
+    display:flex;flex-direction:column;gap:10px;
+    box-shadow:0 0 30px rgba(255,209,102,.18), inset 0 0 20px rgba(255,209,102,.05);
+  }
+  .join-code-title{
+    font-size:13px;font-weight:900;letter-spacing:.24em;
+    color:#ffd166;text-align:center;
+  }
+  .join-code-row{display:flex;gap:10px;}
+  .join-code-row input{
+    flex:1;min-width:0;
+    padding:16px 14px;border-radius:14px;
+    border:2px solid rgba(255,209,102,.45);
+    background:rgba(0,0,0,.35);
+    color:#ffd166;font-size:clamp(22px,7vw,28px);font-weight:900;font-family:inherit;
+    text-align:center;letter-spacing:.4em;text-indent:.4em;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .join-code-row input:focus{
+    border-color:#ffd166;
+    box-shadow:0 0 0 4px rgba(255,209,102,.22);
+  }
+  .join-code-row input::placeholder{color:#7a6b3a;letter-spacing:.3em;text-indent:.3em;font-size:16px;font-weight:700;}
+  .join-code-row .btn{
+    flex:0 0 auto;padding:14px 24px;font-size:15px;border-radius:14px;
+  }
+  .room-code-box{
+    display:none;
+    flex-direction:column;gap:8px;
+    background:rgba(255,209,102,.08);
+    border:1px dashed rgba(255,209,102,.45);
+    border-radius:16px;padding:16px;
+    align-items:center;
+  }
+  .room-code-box.show{display:flex;animation:cardIn .4s both;}
+  .room-code{
+    font-size:clamp(32px,10vw,46px);font-weight:900;letter-spacing:.3em;
+    color:#ffd166;text-indent:.3em;
+    text-shadow:0 0 26px rgba(255,209,102,.5);
+    font-variant-numeric:tabular-nums;
+  }
+  .room-hint{font-size:12.5px;color:#a5a5b8;line-height:1.6;}
+  .lobby-status{
+    min-height:22px;
+    font-size:13px;color:#a5a5b8;line-height:1.5;
+    letter-spacing:.06em;
+    padding:0 4px;
+  }
+  .lobby-status.ok{color:#7ee0a8;}
+  .lobby-status.err{color:#ff6b6b;}
+  .lobby-players{
+    display:flex;align-items:center;justify-content:center;gap:16px;
+    padding:6px 0;
+  }
+  .lp{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .lp .n{
+    font-size:14px;font-weight:900;letter-spacing:.08em;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .lp.me .n{color:#ffd166;}
+  .lp.opp .n{color:#ff8a8a;}
+  .lp .tag{font-size:11px;letter-spacing:.18em;color:#5f5f74;}
+  .lobby-actions{display:flex;flex-direction:column;gap:10px;}
+  .lobby-actions .btn{width:100%;padding:14px 20px;font-size:15px;}
+  .match-status{
+    display:none;
+    flex-direction:column;align-items:center;gap:12px;
+    padding:16px 8px;
+    background:rgba(255,255,255,.03);
+    border:1px dashed rgba(255,255,255,.15);
+    border-radius:16px;
+  }
+  .match-status.show{display:flex;animation:cardIn .35s both;}
+  .match-spinner{
+    width:44px;height:44px;border-radius:50%;
+    border:3px solid rgba(255,209,102,.2);
+    border-top-color:#ffd166;
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .match-text{font-size:13px;letter-spacing:.12em;color:#a5a5b8;text-align:center;line-height:1.6;}
+  .match-text b{color:#ffd166;}
+  @media (max-height:640px){
+    .logo{font-size:clamp(34px,9vw,56px);}
+    .borrow-btn{width:min(46vw,190px);}
+    .card{padding:24px 18px;gap:12px;}
+    .rule{padding:9px 12px;font-size:13.5px;}
+    #screen-menu{gap:14px;}
+    .lobby-card{padding:18px 14px;gap:10px;}
+    .join-code-card{padding:12px 10px;gap:8px;}
+    .join-code-row input{padding:12px 10px;font-size:20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-tutorial">
+  <div class="card">
+    <h1 class="logo">寿术回战</h1>
+    <p class="subtitle">借寿 · 抢命 · 一决高下</p>
+
+    <div class="rules">
+      <div class="rule"><i>壹</i><p>点击「寿来」按钮，每点一次借来 <b>1 年</b> 寿</p></div>
+      <div class="rule"><i>贰</i><p>限时 <b>10 秒</b>，与对手同时抢寿</p></div>
+      <div class="rule"><i>叁</i><p>你借到的寿比对手多，即为 <b>胜利</b></p></div>
+      <div class="rule"><i>肆</i><p>支持 <b>AI 对战</b>、<b>随机匹配</b>、<b>房间码联机</b></p></div>
+    </div>
+
+    <button class="btn primary" id="btn-tutorial-go">开始游玩</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-menu">
+  <h1 class="logo big">寿术回战</h1>
+  <p class="subtitle">与「<span class="ai-name">AI人</span>」抢寿</p>
+
+  <div class="name-editor">
+    <div class="ne-label">AI 对手名字</div>
+    <div class="name-row">
+      <input type="text" id="menu-ai-name" maxlength="12" placeholder="给对手起个名字">
+      <button class="btn primary" id="btn-menu-save-name">保存</button>
+    </div>
+  </div>
+
+  <div class="menu-btns">
+    <button class="btn primary" id="btn-start">AI 对战</button>
+    <button class="btn ghost" id="btn-online">联机对战</button>
+    <button class="btn ghost" id="btn-about">关于</button>
+  </div>
+
+  <div class="dev-badge" id="dev-badge">开发者模式已开启</div>
+</div>
+
+<div class="screen" id="screen-lobby">
+  <div class="lobby-card">
+    <div class="lobby-title">联机对战</div>
+
+    <div>
+      <div class="lobby-label">我的名字</div>
+      <div class="lobby-input-row" style="margin-top:8px;">
+        <input type="text" id="lobby-my-name" maxlength="12" placeholder="输入你的名字">
+        <button class="btn primary" id="btn-save-my-name">保存</button>
+      </div>
+    </div>
+
+    <div class="lobby-players">
+      <div class="lp me">
+        <div class="n" id="lobby-me-name">玩家</div>
+        <div class="tag">我</div>
+      </div>
+      <div class="vs-mini">VS</div>
+      <div class="lp opp">
+        <div class="n" id="lobby-opp-name">等待对手</div>
+        <div class="tag">对手</div>
+      </div>
+    </div>
+
+    <div class="lobby-status" id="lobby-status">创建、加入或随机匹配一个房间</div>
+
+    <div class="room-code-box" id="room-code-box">
+      <div class="lobby-label" style="text-align:center;">房间码（发给好友）</div>
+      <div class="room-code" id="room-code">----</div>
+      <div class="room-hint">好友在同一网络下输入此房间码即可加入</div>
+      <button class="btn ghost small" id="btn-copy-code">复制房间码</button>
+    </div>
+
+    <div class="lobby-actions" id="lobby-actions">
+      <button class="btn primary" id="btn-random-match">随机匹配</button>
+      <button class="btn ghost" id="btn-create-room">创建房间</button>
+    </div>
+
+    <div class="join-code-card" id="join-code-card">
+      <div class="join-code-title">输入房间码加入</div>
+      <div class="join-code-row">
+        <input type="text" id="join-code-input" maxlength="4" placeholder="ABCD" autocomplete="off">
+        <button class="btn primary" id="btn-join-room">加入</button>
+      </div>
+    </div>
+
+    <div class="match-status" id="match-status">
+      <div class="match-spinner"></div>
+      <div class="match-text" id="match-text">正在匹配对手…</div>
+      <button class="btn ghost small" id="btn-cancel-match">取消匹配</button>
+    </div>
+
+    <div class="lobby-actions" id="lobby-inroom-actions" style="display:none;">
+      <button class="btn primary" id="btn-net-start">开始对战</button>
+      <button class="btn ghost" id="btn-net-leave">离开房间</button>
+    </div>
+
+    <button class="btn ghost" id="btn-lobby-back">返回主菜单</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <div class="timer"><span id="timer-val">10.0</span><span class="unit">秒</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="side">
+      <div class="who">你</div>
+      <div class="val" id="player-val">0</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="side ai">
+      <div class="who ai-name">AI人</div>
+      <div class="val" id="ai-val">0</div>
+    </div>
+  </div>
+
+  <button class="borrow-btn" id="btn-borrow">
+    <span class="borrow-main">寿来</span>
+    <span class="borrow-sub">点击 +1 年</span>
+  </button>
+
+  <div class="game-bottom">
+    <button class="btn small ghost" id="btn-pause">暂停</button>
+  </div>
+
+  <div class="countdown-overlay" id="countdown-overlay">
+    <div class="countdown-inner">
+      <div class="countdown-num" id="countdown-num">3</div>
+      <div class="countdown-tip">准备抢寿</div>
+    </div>
+  </div>
+
+  <div class="timeup-overlay" id="timeup-overlay">
+    <div class="timeup-text">时间到！</div>
+    <div class="timeup-sub">结 算 中</div>
+  </div>
+
+  <div class="overlay" id="pause-overlay">
+    <div class="box">
+      <h2>已 暂 停</h2>
+      <p class="muted">时间已冻结，喘口气吧</p>
+      <div class="row">
+        <button class="btn primary" id="btn-resume">继续</button>
+        <button class="btn ghost" id="btn-quit">返回主页</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="result-overlay">
+    <div class="box">
+      <h2 id="result-title">胜利</h2>
+      <div class="result-scores">
+        <div class="rs"><span class="lbl">你</span><span class="v" id="result-player">0</span></div>
+        <div class="vs-mini">VS</div>
+        <div class="rs"><span class="lbl ai-name">AI人</span><span class="v" id="result-ai">0</span></div>
+      </div>
+      <p id="result-desc" class="muted"></p>
+      <div class="row">
+        <button class="btn primary" id="btn-again">再来一局</button>
+        <button class="btn ghost" id="btn-home">返回主页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-netgame">
+  <div class="game-top">
+    <div class="timer"><span id="net-timer-val">10.0</span><span class="unit">秒</span></div>
+    <div class="bar"><div class="bar-fill" id="net-bar-fill"></div></div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="side">
+      <div class="who" id="net-me-name">我</div>
+      <div class="val" id="net-me-val">0</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="side ai">
+      <div class="who" id="net-opp-name">对手</div>
+      <div class="val" id="net-opp-val">0</div>
+    </div>
+  </div>
+
+  <button class="borrow-btn" id="btn-net-borrow">
+    <span class="borrow-main">寿来</span>
+    <span class="borrow-sub">点击 +1 年</span>
+  </button>
+
+  <div class="game-bottom"></div>
+
+  <div class="countdown-overlay" id="net-countdown-overlay">
+    <div class="countdown-inner">
+      <div class="countdown-num" id="net-countdown-num">3</div>
+      <div class="countdown-tip">准备抢寿</div>
+    </div>
+  </div>
+
+  <div class="timeup-overlay" id="net-timeup-overlay">
+    <div class="timeup-text">时间到！</div>
+    <div class="timeup-sub">结 算 中</div>
+  </div>
+
+  <div class="overlay" id="net-result-overlay">
+    <div class="box">
+      <h2 id="net-result-title">胜利</h2>
+      <div class="result-scores">
+        <div class="rs"><span class="lbl" id="net-result-me-lbl">我</span><span class="v" id="net-result-me">0</span></div>
+        <div class="vs-mini">VS</div>
+        <div class="rs"><span class="lbl" id="net-result-opp-lbl">对手</span><span class="v" id="net-result-opp">0</span></div>
+      </div>
+      <p id="net-result-desc" class="muted"></p>
+      <div class="row">
+        <button class="btn primary" id="btn-net-again">再来一局</button>
+        <button class="btn ghost" id="btn-net-home">返回大厅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-about">
+  <div class="modal">
+    <h2>关 于</h2>
+    <p>游戏名称：<b>寿术回战</b></p>
+    <p>版本号：<span class="version">v2.0</span></p>
+    <p>原作者：<span class="author" id="author-credit">附中c罗</span></p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btn-about-close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-dev">
+  <div class="modal">
+    <h2>开发者设置</h2>
+    <p>请输入开发者设置码</p>
+    <input type="password" id="dev-code-input" placeholder="开发者设置码" autocomplete="off">
+    <p class="error" id="dev-error"></p>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-dev-confirm">确认</button>
+      <button class="btn ghost" id="btn-dev-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-devpanel">
+  <div class="modal">
+    <h2>开发者模式</h2>
+    <p>AI 借寿：<b>已禁用</b>（仅 AI 对战模式生效）</p>
+    <div class="dev-note">
+      联机对战中开启开发者模式后，对手的「寿来」按钮会变灰且无法点击；关闭后对手恢复。该效果不会弹出任何提示。
+    </div>
+    <label>
+      AI 名字
+      <input type="text" id="ai-name-input" maxlength="12" placeholder="给对手起个名字">
+    </label>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-devpanel-save">保存</button>
+      <button class="btn ghost" id="btn-devpanel-close">关闭</button>
+    </div>
+    <button class="btn ghost danger" id="btn-dev-off" style="padding:12px 28px;font-size:15px;">关闭开发者模式</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  const GAME_TIME = 10;
+  const COUNTDOWN_SECONDS = 3;
+  const TIMEUP_HOLD = 2000;
+  const DEV_CODE = 'baoquan9178';
+  const BANNED_NAME_PARTS = ['c罗'];
+  function isNameBanned(name) {
+    const lower = String(name || '').toLowerCase();
+    return BANNED_NAME_PARTS.some(part => lower.includes(part));
+  }
+  const AI_INTERVAL_MIN = 0.045;
+  const AI_INTERVAL_MAX = 0.85;
+  function rollBaseInterval() {
+    const r = Math.random();
+    const t = Math.pow(r, 1.6);
+    return AI_INTERVAL_MIN + t * (AI_INTERVAL_MAX - AI_INTERVAL_MIN);
+  }
+  const state = {
+    running: false,
+    paused: false,
+    timeLeft: GAME_TIME,
+    playerLife: 0,
+    aiLife: 0,
+    aiCountdown: 0.4,
+    aiBaseInterval: 0.3,
+    burstSeed: 0,
+    devMode: false,
+    aiName: 'AI人'
+  };
+  const $ = id => document.getElementById(id);
+  const screens = {
+    tutorial: $('screen-tutorial'),
+    menu: $('screen-menu'),
+    lobby: $('screen-lobby'),
+    game: $('screen-game'),
+    netgame: $('screen-netgame')
+  };
+  const el = {
+    timerVal: $('timer-val'),
+    barFill: $('bar-fill'),
+    playerVal: $('player-val'),
+    aiVal: $('ai-val'),
+    btnBorrow: $('btn-borrow'),
+    btnPause: $('btn-pause'),
+    pauseOverlay: $('pause-overlay'),
+    resultOverlay: $('result-overlay'),
+    resultTitle: $('result-title'),
+    resultPlayer: $('result-player'),
+    resultAi: $('result-ai'),
+    resultDesc: $('result-desc'),
+    devBadge: $('dev-badge'),
+    authorCredit: $('author-credit'),
+    devCodeInput: $('dev-code-input'),
+    devError: $('dev-error'),
+    aiNameInput: $('ai-name-input'),
+    menuAiName: $('menu-ai-name'),
+    btnMenuSaveName: $('btn-menu-save-name'),
+    modalAbout: $('modal-about'),
+    modalDev: $('modal-dev'),
+    modalDevPanel: $('modal-devpanel'),
+    countdownOverlay: $('countdown-overlay'),
+    countdownNum: $('countdown-num'),
+    timeupOverlay: $('timeup-overlay'),
+    btnNetBorrow: $('btn-net-borrow')
+  };
+  function showScreen(name) {
+    Object.keys(screens).forEach(key => {
+      screens[key].classList.toggle('active', key === name);
+    });
+    if (name === 'menu' && el.menuAiName) {
+      el.menuAiName.value = state.aiName;
+    }
+  }
+  function openModal(node) { node.classList.add('active'); }
+  function closeModal(node) { node.classList.remove('active'); }
+  function syncNames() {
+    document.querySelectorAll('.ai-name').forEach(n => {
+      n.textContent = state.aiName;
+    });
+  }
+  function updateHUD() {
+    el.timerVal.textContent = state.timeLeft.toFixed(1);
+    el.playerVal.textContent = state.playerLife;
+    el.aiVal.textContent = state.aiLife;
+    el.barFill.style.width = Math.max(0, (state.timeLeft / GAME_TIME) * 100) + '%';
+  }
+  function popAnim(node) {
+    node.classList.remove('pop');
+    void node.offsetWidth;
+    node.classList.add('pop');
+  }
+  let countdownTimer = null;
+  function setCountdownNumber(n) {
+    el.countdownNum.textContent = n;
+    el.countdownNum.style.animation = 'none';
+    void el.countdownNum.offsetWidth;
+    el.countdownNum.style.animation = '';
+  }
+  function cancelCountdown() {
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+    el.countdownOverlay.classList.remove('active');
+  }
+  function runCountdown(onFinish) {
+    let n = COUNTDOWN_SECONDS;
+    el.countdownOverlay.classList.add('active');
+    setCountdownNumber(n);
+    countdownTimer = setInterval(() => {
+      n--;
+      if (n <= 0) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        el.countdownOverlay.classList.remove('active');
+        onFinish();
+      } else {
+        setCountdownNumber(n);
+      }
+    }, 1000);
+  }
+  let timeUpTimer = null;
+  function cancelTimeUp() {
+    if (timeUpTimer) {
+      clearTimeout(timeUpTimer);
+      timeUpTimer = null;
+    }
+    el.timeupOverlay.classList.remove('active');
+  }
+  function showTimeUpThenResult() {
+    el.timeupOverlay.classList.add('active');
+    timeUpTimer = setTimeout(() => {
+      timeUpTimer = null;
+      el.timeupOverlay.classList.remove('active');
+      showResult();
+    }, TIMEUP_HOLD);
+  }
+  let rafId = null;
+  let lastTime = 0;
+  function loop(t) {
+    if (!state.running) return;
+    if (!lastTime) lastTime = t;
+    let dt = (t - lastTime) / 1000;
+    lastTime = t;
+    if (dt > 0.25) dt = 0.25;
+    if (!state.paused) {
+      state.timeLeft -= dt;
+      if (state.timeLeft <= 0) {
+        state.timeLeft = 0;
+        updateHUD();
+        endGame();
+        return;
+      }
+      if (!state.devMode) {
+        const gap = state.playerLife - state.aiLife;
+        let adjust;
+        if (gap > 0) {
+          adjust = 1 + Math.min(gap * 0.07, 2.2);
+        } else if (gap < 0) {
+          adjust = Math.max(1 + gap * 0.045, 0.55);
+        } else {
+          adjust = 1;
+        }
+        const elapsed = GAME_TIME - state.timeLeft;
+        const burstPhase = Math.sin(elapsed * 2.1 + state.burstSeed);
+        if (burstPhase > 0.55) {
+          adjust *= 1.55;
+        }
+        const currentInterval = Math.max(
+          0.032,
+          state.aiBaseInterval * adjust
+        );
+        state.aiCountdown -= dt;
+        let guard = 0;
+        while (state.aiCountdown <= 0 && guard++ < 50) {
+          state.aiLife++;
+          const jitter = 0.85 + Math.random() * 0.30;
+          state.aiCountdown += currentInterval * jitter;
+        }
+      }
+      updateHUD();
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+  function startGame() {
+    cancelCountdown();
+    cancelTimeUp();
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    lastTime = 0;
+    state.running = false;
+    state.paused = false;
+    state.timeLeft = GAME_TIME;
+    state.playerLife = 0;
+    state.aiLife = 0;
+    state.aiBaseInterval = rollBaseInterval();
+    state.burstSeed = Math.random() * Math.PI * 2;
+    state.aiCountdown = state.aiBaseInterval * (0.6 + Math.random() * 0.8);
+    el.pauseOverlay.classList.remove('active');
+    el.resultOverlay.classList.remove('active');
+    el.btnPause.textContent = '暂停';
+    syncNames();
+    updateHUD();
+    showScreen('game');
+    runCountdown(() => {
+      state.running = true;
+      lastTime = 0;
+      rafId = requestAnimationFrame(loop);
+    });
+  }
+  function endGame() {
+    state.running = false;
+    state.paused = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    lastTime = 0;
+    el.pauseOverlay.classList.remove('active');
+    el.resultOverlay.classList.remove('active');
+    el.btnPause.textContent = '暂停';
+    showTimeUpThenResult();
+  }
+  function showResult() {
+    const p = state.playerLife;
+    const a = state.aiLife;
+    const win = p > a;
+    el.resultPlayer.textContent = p;
+    el.resultAi.textContent = a;
+    el.resultTitle.textContent = win ? '你 赢 了' : (state.aiName + ' 赢 了');
+    el.resultTitle.className = win ? 'win' : 'lose';
+    if (win) {
+      el.resultDesc.textContent = '你借到的寿更多，给你加 ' + p + ' 年寿命！';
+    } else if (p === a) {
+      el.resultDesc.textContent = '寿数相同——按规则，对手获胜。';
+    } else {
+      el.resultDesc.textContent = '对手借到的寿更多，你败下阵来。';
+    }
+    el.resultOverlay.classList.add('active');
+  }
+  function togglePause() {
+    if (!state.running) return;
+    state.paused = !state.paused;
+    el.pauseOverlay.classList.toggle('active', state.paused);
+    el.btnPause.textContent = state.paused ? '继续' : '暂停';
+  }
+  function resumeGame() {
+    if (!state.running) return;
+    state.paused = false;
+    el.pauseOverlay.classList.remove('active');
+    el.btnPause.textContent = '暂停';
+  }
+  function quitToMenu() {
+    cancelCountdown();
+    cancelTimeUp();
+    state.running = false;
+    state.paused = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    lastTime = 0;
+    el.pauseOverlay.classList.remove('active');
+    el.resultOverlay.classList.remove('active');
+    showScreen('menu');
+  }
+  function borrowLife(e) {
+    if (!state.running || state.paused) return;
+    state.playerLife++;
+    el.playerVal.textContent = state.playerLife;
+    popAnim(el.playerVal);
+    const x = (e.clientX !== undefined ? e.clientX : el.btnBorrow.getBoundingClientRect().left + el.btnBorrow.offsetWidth / 2);
+    const y = (e.clientY !== undefined ? e.clientY : el.btnBorrow.getBoundingClientRect().top + el.btnBorrow.offsetHeight / 2);
+    spawnPlus(x, y);
+  }
+  function spawnPlus(x, y) {
+    const node = document.createElement('div');
+    node.className = 'float-plus';
+    node.textContent = '+1 年';
+    node.style.left = (x + (Math.random() * 70 - 35)) + 'px';
+    node.style.top = (y - 30) + 'px';
+    document.body.appendChild(node);
+    setTimeout(() => node.remove(), 820);
+  }
+  function setDevMode(on) {
+    state.devMode = on;
+    el.devBadge.classList.toggle('show', on);
+    broadcastDevMode();
+  }
+  function broadcastDevMode() {
+    if (net.conn && net.conn.open) {
+      sendNet({ type: 'devmode', enabled: state.devMode });
+    }
+  }
+  const net = {
+    peer: null,
+    conn: null,
+    isHost: false,
+    roomCode: '',
+    myName: '玩家',
+    oppName: '对手',
+    myScore: 0,
+    oppScore: 0,
+    phase: 'idle',
+    timeLeft: GAME_TIME,
+    connected: false,
+    oppDevLocked: false,
+    rafId: null,
+    lastTime: 0,
+    syncTimer: null,
+    countdownTimer: null,
+    timeupTimer: null
+  };
+  const match = {
+    active: false,
+    cancelled: false,
+    attempt: 0,
+    maxAttempts: 20,
+    peer: null,
+    waitTimer: null,
+    guestTimer: null
+  };
+  function genRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+  function setLobbyStatus(text, type) {
+    const node = $('lobby-status');
+    node.textContent = text;
+    node.className = 'lobby-status' + (type ? ' ' + type : '');
+  }
+  function updateLobbyPlayers() {
+    $('lobby-me-name').textContent = net.myName;
+    $('lobby-opp-name').textContent = net.connected ? net.oppName : '等待对手';
+  }
+  function showRoomCode(code) {
+    $('room-code').textContent = code;
+    $('room-code-box').classList.add('show');
+  }
+  function hideRoomCode() {
+    $('room-code-box').classList.remove('show');
+  }
+  function showInRoomActions() {
+    $('lobby-actions').style.display = 'none';
+    $('join-code-card').style.display = 'none';
+    $('lobby-inroom-actions').style.display = 'flex';
+    $('btn-net-start').style.display = net.isHost ? '' : 'none';
+  }
+  function showLobbyActions() {
+    $('lobby-actions').style.display = 'flex';
+    $('join-code-card').style.display = '';
+    $('lobby-inroom-actions').style.display = 'none';
+  }
+  function setLobbyControlsEnabled(enabled) {
+    $('btn-random-match').disabled = !enabled;
+    $('btn-create-room').disabled = !enabled;
+    $('btn-join-room').disabled = !enabled;
+    $('join-code-input').disabled = !enabled;
+  }
+  function applyOppDevLock(locked) {
+    net.oppDevLocked = !!locked;
+    el.btnNetBorrow.classList.toggle('disabled-by-dev', net.oppDevLocked);
+  }
+  function updateNetHUD() {
+    $('net-timer-val').textContent = net.timeLeft.toFixed(1);
+    $('net-me-val').textContent = net.myScore;
+    $('net-opp-val').textContent = net.oppScore;
+    $('net-bar-fill').style.width = Math.max(0, (net.timeLeft / GAME_TIME) * 100) + '%';
+    $('net-me-name').textContent = net.myName;
+    $('net-opp-name').textContent = net.oppName;
+  }
+  function sendNet(msg) {
+    if (net.conn && net.conn.open) {
+      try { net.conn.send(msg); } catch (e) { }
+    }
+  }
+  function cleanupNet() {
+    stopRandomMatch(true);
+    if (net.rafId) cancelAnimationFrame(net.rafId);
+    net.rafId = null;
+    net.lastTime = 0;
+    if (net.syncTimer) { clearInterval(net.syncTimer); net.syncTimer = null; }
+    if (net.countdownTimer) { clearInterval(net.countdownTimer); net.countdownTimer = null; }
+    if (net.timeupTimer) { clearTimeout(net.timeupTimer); net.timeupTimer = null; }
+    if (net.conn) {
+      try { net.conn.close(); } catch (e) {}
+      net.conn = null;
+    }
+    if (net.peer) {
+      try { net.peer.destroy(); } catch (e) {}
+      net.peer = null;
+    }
+    net.connected = false;
+    net.isHost = false;
+    net.roomCode = '';
+    net.phase = 'idle';
+    net.myScore = 0;
+    net.oppScore = 0;
+    net.timeLeft = GAME_TIME;
+    applyOppDevLock(false);
+  }
+  function cleanupNetGameOnly() {
+    if (net.rafId) cancelAnimationFrame(net.rafId);
+    net.rafId = null;
+    net.lastTime = 0;
+    if (net.syncTimer) { clearInterval(net.syncTimer); net.syncTimer = null; }
+    if (net.countdownTimer) { clearInterval(net.countdownTimer); net.countdownTimer = null; }
+    if (net.timeupTimer) { clearTimeout(net.timeupTimer); net.timeupTimer = null; }
+    net.phase = 'idle';
+    $('net-countdown-overlay').classList.remove('active');
+    $('net-timeup-overlay').classList.remove('active');
+    $('net-result-overlay').classList.remove('active');
+  }
+  function onConnectionOpen(conn) {
+    net.conn = conn;
+    net.connected = true;
+    sendNet({ type: 'hello', name: net.myName });
+    sendNet({ type: 'devmode', enabled: state.devMode });
+    conn.on('data', onNetData);
+    conn.on('close', onConnectionClose);
+    updateLobbyPlayers();
+    showInRoomActions();
+    hideRoomCode();
+    setLobbyControlsEnabled(true);
+    $('btn-net-start').disabled = false;
+    if (net.isHost) {
+      setLobbyStatus('对手已加入！点击「开始对战」', 'ok');
+    } else {
+      setLobbyStatus('已连接！等待房主开始', 'ok');
+    }
+  }
+  function onConnectionClose() {
+    net.connected = false;
+    applyOppDevLock(false);
+    setLobbyStatus('对方已断开连接', 'err');
+    showLobbyActions();
+    hideRoomCode();
+    setLobbyControlsEnabled(true);
+    updateLobbyPlayers();
+    if (net.phase !== 'idle') {
+      cleanupNetGameOnly();
+      showScreen('lobby');
+    }
+  }
+  function onNetData(msg) {
+    if (!msg || typeof msg !== 'object') return;
+    switch (msg.type) {
+      case 'hello':
+        net.oppName = (msg.name || '对手').slice(0, 12);
+        updateLobbyPlayers();
+        updateNetHUD();
+        sendNet({ type: 'devmode', enabled: state.devMode });
+        break;
+      case 'devmode':
+        applyOppDevLock(!!msg.enabled);
+        break;
+      case 'start':
+        startNetCountdown();
+        break;
+      case 'tap':
+        if (typeof msg.score === 'number' && msg.score > net.oppScore) {
+          net.oppScore = msg.score;
+          $('net-opp-val').textContent = net.oppScore;
+          popAnim($('net-opp-val'));
+        }
+        break;
+      case 'time':
+        if (net.phase === 'playing') {
+          net.timeLeft = msg.t;
+          $('net-timer-val').textContent = net.timeLeft.toFixed(1);
+          $('net-bar-fill').style.width = Math.max(0, (net.timeLeft / GAME_TIME) * 100) + '%';
+        }
+        break;
+      case 'timeup':
+        if (net.phase !== 'timeup' && net.phase !== 'result') {
+          net.phase = 'timeup';
+          showNetTimeUpThenResult();
+        }
+        break;
+      case 'result':
+        showNetResult(msg.hostScore, msg.guestScore, msg.hostName, msg.guestName);
+        break;
+      case 'leave':
+        setLobbyStatus('对方离开了房间', 'err');
+        onConnectionClose();
+        break;
+    }
+  }
+  function showNetCountdownNumber(n) {
+    const node = $('net-countdown-num');
+    node.textContent = n;
+    node.style.animation = 'none';
+    void node.offsetWidth;
+    node.style.animation = '';
+  }
+  function startNetCountdown() {
+    cleanupNetGameOnly();
+    net.phase = 'countdown';
+    net.myScore = 0;
+    net.oppScore = 0;
+    net.timeLeft = GAME_TIME;
+    updateNetHUD();
+    showScreen('netgame');
+    $('net-countdown-overlay').classList.add('active');
+    let n = COUNTDOWN_SECONDS;
+    showNetCountdownNumber(n);
+    net.countdownTimer = setInterval(() => {
+      n--;
+      if (n <= 0) {
+        clearInterval(net.countdownTimer);
+        net.countdownTimer = null;
+        $('net-countdown-overlay').classList.remove('active');
+        beginNetPlaying();
+      } else {
+        showNetCountdownNumber(n);
+      }
+    }, 1000);
+  }
+  function beginNetPlaying() {
+    net.phase = 'playing';
+    net.timeLeft = GAME_TIME;
+    net.lastTime = 0;
+    net.rafId = requestAnimationFrame(netLoop);
+    if (net.isHost) {
+      if (net.syncTimer) clearInterval(net.syncTimer);
+      net.syncTimer = setInterval(() => {
+        if (net.phase === 'playing') {
+          sendNet({ type: 'time', t: net.timeLeft });
+        }
+      }, 100);
+    }
+  }
+  function netLoop(t) {
+    if (net.phase !== 'playing') return;
+    if (!net.lastTime) net.lastTime = t;
+    let dt = (t - net.lastTime) / 1000;
+    net.lastTime = t;
+    if (dt > 0.25) dt = 0.25;
+    net.timeLeft -= dt;
+    if (net.timeLeft <= 0) {
+      net.timeLeft = 0;
+      $('net-timer-val').textContent = '0.0';
+      $('net-bar-fill').style.width = '0%';
+      if (net.isHost) {
+        net.phase = 'timeup';
+        sendNet({
+          type: 'result',
+          hostScore: net.myScore,
+          guestScore: net.oppScore,
+          hostName: net.myName,
+          guestName: net.oppName
+        });
+        sendNet({ type: 'timeup' });
+        showNetTimeUpThenResult();
+      } else {
+        net.phase = 'timeup';
+        showNetTimeUpThenResult();
+      }
+      return;
+    }
+    $('net-timer-val').textContent = net.timeLeft.toFixed(1);
+    $('net-bar-fill').style.width = Math.max(0, (net.timeLeft / GAME_TIME) * 100) + '%';
+    net.rafId = requestAnimationFrame(netLoop);
+  }
+  function showNetTimeUpThenResult() {
+    if (net.rafId) cancelAnimationFrame(net.rafId);
+    net.rafId = null;
+    if (net.syncTimer) { clearInterval(net.syncTimer); net.syncTimer = null; }
+    $('net-timeup-overlay').classList.add('active');
+    if (net.timeupTimer) clearTimeout(net.timeupTimer);
+    net.timeupTimer = setTimeout(() => {
+      net.timeupTimer = null;
+      $('net-timeup-overlay').classList.remove('active');
+      if (!net.isHost && !$('net-result-overlay').classList.contains('active')) {
+        showNetResult(net.oppScore, net.myScore, net.oppName, net.myName);
+      }
+    }, TIMEUP_HOLD);
+  }
+  function showNetResult(hostScore, guestScore, hostName, guestName) {
+    net.phase = 'result';
+    let meScore, oppScore;
+    if (net.isHost) {
+      meScore = hostScore;
+      oppScore = guestScore;
+    } else {
+      meScore = guestScore;
+      oppScore = hostScore;
+    }
+    net.myScore = meScore;
+    net.oppScore = oppScore;
+    const win = meScore > oppScore;
+    $('net-result-me-lbl').textContent = net.myName;
+    $('net-result-opp-lbl').textContent = net.oppName;
+    $('net-result-me').textContent = meScore;
+    $('net-result-opp').textContent = oppScore;
+    const title = $('net-result-title');
+    title.textContent = win ? '你 赢 了' : (net.oppName + ' 赢 了');
+    title.className = win ? 'win' : 'lose';
+    if (win) {
+      $('net-result-desc').textContent = '你借到的寿更多，给你加 ' + meScore + ' 年寿命！';
+    } else if (meScore === oppScore) {
+      $('net-result-desc').textContent = '寿数相同——按规则，对手获胜。';
+    } else {
+      $('net-result-desc').textContent = '对手借到的寿更多，你败下阵来。';
+    }
+    $('btn-net-again').style.display = net.isHost ? '' : 'none';
+    $('net-result-overlay').classList.add('active');
+  }
+  function netBorrowLife(e) {
+    if (net.phase !== 'playing') return;
+    if (net.oppDevLocked) return;
+    net.myScore++;
+    $('net-me-val').textContent = net.myScore;
+    popAnim($('net-me-val'));
+    sendNet({ type: 'tap', score: net.myScore });
+    const x = (e.clientX !== undefined ? e.clientX : $('btn-net-borrow').getBoundingClientRect().left + $('btn-net-borrow').offsetWidth / 2);
+    const y = (e.clientY !== undefined ? e.clientY : $('btn-net-borrow').getBoundingClientRect().top + $('btn-net-borrow').offsetHeight / 2);
+    spawnPlus(x, y);
+  }
+  function netExitToLobby() {
+    sendNet({ type: 'leave' });
+    cleanupNetGameOnly();
+    updateLobbyPlayers();
+    setLobbyStatus('你已退出对战', '');
+    showInRoomActions();
+    showScreen('lobby');
+  }
+  function showMatchStatus(text) {
+    $('match-status').classList.add('show');
+    $('match-text').innerHTML = text;
+    $('lobby-actions').style.display = 'none';
+    $('join-code-card').style.display = 'none';
+    $('room-code-box').classList.remove('show');
+  }
+  function hideMatchStatus() {
+    $('match-status').classList.remove('show');
+  }
+  function stopRandomMatch(silent) {
+    match.active = false;
+    match.cancelled = true;
+    if (match.waitTimer) { clearTimeout(match.waitTimer); match.waitTimer = null; }
+    if (match.guestTimer) { clearTimeout(match.guestTimer); match.guestTimer = null; }
+    if (match.peer) {
+      try { match.peer.destroy(); } catch (e) {}
+      match.peer = null;
+    }
+    hideMatchStatus();
+    if (!silent) {
+      showLobbyActions();
+      setLobbyControlsEnabled(true);
+      if (!net.connected) setLobbyStatus('已取消匹配', '');
+    }
+  }
+  function startRandomMatch() {
+    if (typeof Peer === 'undefined') {
+      setLobbyStatus('联机组件加载失败，请检查网络后刷新', 'err');
+      return;
+    }
+    cleanupNet();
+    match.active = true;
+    match.cancelled = false;
+    match.attempt = 0;
+    setLobbyControlsEnabled(false);
+    showMatchStatus('正在匹配对手…');
+    tryNextSlot();
+  }
+  function tryNextSlot() {
+    if (!match.active || match.cancelled) return;
+    if (match.attempt >= match.maxAttempts) {
+      stopRandomMatch(false);
+      setLobbyStatus('暂时没找到对手，请稍后重试或使用房间码', 'err');
+      return;
+    }
+    match.attempt++;
+    const slot = Math.floor(Date.now() / 5000) % 1000;
+    const code = 'M' + String(slot).padStart(3, '0');
+    $('match-text').innerHTML =
+      '正在匹配对手…<br><b>第 ' + match.attempt + ' / ' + match.maxAttempts + ' 次尝试</b>';
+    tryMatchAsGuest(code, (success) => {
+      if (success) return;
+      if (!match.active || match.cancelled) return;
+      tryMatchAsHost(code, (success2) => {
+        if (success2) return;
+        if (!match.active || match.cancelled) return;
+        setTimeout(tryNextSlot, 150);
+      });
+    });
+  }
+  function tryMatchAsGuest(code, done) {
+    let p;
+    try {
+      p = new Peer({ debug: 0 });
+    } catch (e) {
+      done(false);
+      return;
+    }
+    match.peer = p;
+    let finished = false;
+    const finish = (ok) => {
+      if (finished) return;
+      finished = true;
+      if (match.guestTimer) { clearTimeout(match.guestTimer); match.guestTimer = null; }
+      if (!ok && match.peer === p) {
+        try { p.destroy(); } catch (e) {}
+        match.peer = null;
+      }
+      done(ok);
+    };
+    match.guestTimer = setTimeout(() => finish(false), 1300);
+    p.on('open', () => {
+      if (finished || match.cancelled) { finish(false); return; }
+      let conn;
+      try {
+        conn = p.connect('sshz-' + code, { reliable: true });
+      } catch (e) {
+        finish(false);
+        return;
+      }
+      conn.on('open', () => {
+        if (finished || match.cancelled) {
+          try { conn.close(); } catch (e) {}
+          finish(false);
+          return;
+        }
+        finished = true;
+        if (match.guestTimer) { clearTimeout(match.guestTimer); match.guestTimer = null; }
+        match.active = false;
+        match.peer = null;
+        net.peer = p;
+        net.isHost = false;
+        net.roomCode = code;
+        hideMatchStatus();
+        onConnectionOpen(conn);
+        setLobbyStatus('随机匹配成功！等待房主开始', 'ok');
+        $('btn-net-start').disabled = false;
+      });
+      conn.on('error', () => finish(false));
+    });
+    p.on('error', () => finish(false));
+  }
+  function tryMatchAsHost(code, done) {
+    let p;
+    try {
+      p = new Peer('sshz-' + code, { debug: 0 });
+    } catch (e) {
+      done(false);
+      return;
+    }
+    match.peer = p;
+    let finished = false;
+    const finish = (ok) => {
+      if (finished) return;
+      finished = true;
+      if (match.waitTimer) { clearTimeout(match.waitTimer); match.waitTimer = null; }
+      if (!ok && match.peer === p) {
+        try { p.destroy(); } catch (e) {}
+        match.peer = null;
+      }
+      done(ok);
+    };
+    p.on('open', () => {
+      if (finished || match.cancelled) { finish(false); return; }
+      const now = Date.now();
+      const nextWindow = (Math.floor(now / 5000) + 1) * 5000 + 800;
+      match.waitTimer = setTimeout(() => finish(false), Math.max(1500, nextWindow - now));
+    });
+    p.on('connection', (conn) => {
+      if (finished || match.cancelled) {
+        try { conn.close(); } catch (e) {}
+        return;
+      }
+      conn.on('open', () => {
+        if (finished || match.cancelled) {
+          try { conn.close(); } catch (e) {}
+          finish(false);
+          return;
+        }
+        finished = true;
+        if (match.waitTimer) { clearTimeout(match.waitTimer); match.waitTimer = null; }
+        match.active = false;
+        match.peer = null;
+        net.peer = p;
+        net.isHost = true;
+        net.roomCode = code;
+        hideMatchStatus();
+        onConnectionOpen(conn);
+        $('btn-net-start').disabled = false;
+        setLobbyStatus('随机匹配成功！点击「开始对战」', 'ok');
+      });
+    });
+    p.on('error', () => finish(false));
+  }
+  function createRoom() {
+    if (typeof Peer === 'undefined') {
+      setLobbyStatus('联机组件加载失败，请检查网络后刷新', 'err');
+      return;
+    }
+    cleanupNet();
+    net.isHost = true;
+    const code = genRoomCode();
+    net.roomCode = code;
+    setLobbyStatus('正在创建房间…', '');
+    setLobbyControlsEnabled(false);
+    let peer;
+    try {
+      peer = new Peer('sshz-' + code, { debug: 0 });
+    } catch (err) {
+      setLobbyStatus('创建房间失败，请重试', 'err');
+      setLobbyControlsEnabled(true);
+      return;
+    }
+    net.peer = peer;
+    peer.on('open', () => {
+      showRoomCode(code);
+      setLobbyStatus('房间已创建，等待对手加入…', 'ok');
+      updateLobbyPlayers();
+      showInRoomActions();
+      $('btn-net-start').disabled = true;
+    });
+    peer.on('connection', (conn) => {
+      if (net.conn) {
+        try { conn.close(); } catch (e) {}
+        return;
+      }
+      conn.on('open', () => {
+        onConnectionOpen(conn);
+      });
+    });
+    peer.on('error', (err) => {
+      if (err && err.type === 'unavailable-id') {
+        setLobbyStatus('房间码冲突，正在重试…', '');
+        try { peer.destroy(); } catch (e) {}
+        setTimeout(createRoom, 300);
+      } else {
+        setLobbyStatus('房间创建失败：' + (err && err.type ? err.type : '网络错误'), 'err');
+        setLobbyControlsEnabled(true);
+      }
+    });
+  }
+  function joinRoom() {
+    if (typeof Peer === 'undefined') {
+      setLobbyStatus('联机组件加载失败，请检查网络后刷新', 'err');
+      return;
+    }
+    const code = ($('join-code-input').value || '').trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) {
+      setLobbyStatus('请输入 4 位房间码', 'err');
+      $('join-code-input').focus();
+      return;
+    }
+    cleanupNet();
+    net.isHost = false;
+    net.roomCode = code;
+    setLobbyStatus('正在加入房间 ' + code + ' …', '');
+    setLobbyControlsEnabled(false);
+    let peer;
+    try {
+      peer = new Peer({ debug: 0 });
+    } catch (err) {
+      setLobbyStatus('加入失败，请重试', 'err');
+      setLobbyControlsEnabled(true);
+      return;
+    }
+    net.peer = peer;
+    peer.on('open', () => {
+      let conn;
+      try {
+        conn = peer.connect('sshz-' + code, { reliable: true });
+      } catch (err) {
+        setLobbyStatus('无法连接该房间', 'err');
+        setLobbyControlsEnabled(true);
+        return;
+      }
+      const timeout = setTimeout(() => {
+        if (!net.connected) {
+          setLobbyStatus('连接超时，请确认房间码与网络', 'err');
+          setLobbyControlsEnabled(true);
+          try { peer.destroy(); } catch (e) {}
+          net.peer = null;
+        }
+      }, 8000);
+      conn.on('open', () => {
+        clearTimeout(timeout);
+        onConnectionOpen(conn);
+      });
+      conn.on('error', () => {
+        clearTimeout(timeout);
+        setLobbyStatus('连接失败，请确认房间码', 'err');
+        setLobbyControlsEnabled(true);
+      });
+    });
+    peer.on('error', (err) => {
+      setLobbyStatus('加入失败：' + (err && err.type ? err.type : '网络错误'), 'err');
+      setLobbyControlsEnabled(true);
+    });
+  }
+  function hostStartNetGame() {
+    if (!net.isHost || !net.connected) return;
+    if (net.phase === 'playing' || net.phase === 'countdown') return;
+    cleanupNetGameOnly();
+    sendNet({ type: 'start' });
+    startNetCountdown();
+  }
+  $('btn-tutorial-go').addEventListener('click', () => showScreen('menu'));
+  $('btn-start').addEventListener('click', startGame);
+  $('btn-about').addEventListener('click', () => openModal(el.modalAbout));
+  $('btn-about-close').addEventListener('click', () => closeModal(el.modalAbout));
+  $('btn-online').addEventListener('click', () => {
+    cleanupNet();
+    net.myName = $('lobby-my-name').value.trim() || '玩家';
+    if (isNameBanned(net.myName)) net.myName = '玩家';
+    $('lobby-my-name').value = net.myName;
+    updateLobbyPlayers();
+    setLobbyStatus('创建、加入或随机匹配一个房间', '');
+    showLobbyActions();
+    hideRoomCode();
+    hideMatchStatus();
+    setLobbyControlsEnabled(true);
+    showScreen('lobby');
+  });
+  function saveMenuAiName() {
+    const raw = el.menuAiName.value.trim();
+    const name = raw || 'AI人';
+    if (isNameBanned(name)) {
+      const btn = el.btnMenuSaveName;
+      btn.textContent = '含屏蔽词';
+      btn.disabled = true;
+      el.menuAiName.style.borderColor = '#ff6b6b';
+      setTimeout(() => {
+        btn.textContent = '保存';
+        btn.disabled = false;
+        el.menuAiName.style.borderColor = '';
+      }, 1200);
+      return;
+    }
+    state.aiName = name;
+    syncNames();
+    const btn = el.btnMenuSaveName;
+    btn.textContent = '已保存 ✓';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = '保存';
+      btn.disabled = false;
+    }, 1100);
+  }
+  el.btnMenuSaveName.addEventListener('click', saveMenuAiName);
+  el.menuAiName.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveMenuAiName();
+  });
+  el.btnBorrow.addEventListener('pointerdown', borrowLife);
+  el.btnPause.addEventListener('click', togglePause);
+  $('btn-resume').addEventListener('click', resumeGame);
+  $('btn-quit').addEventListener('click', quitToMenu);
+  $('btn-again').addEventListener('click', startGame);
+  $('btn-home').addEventListener('click', quitToMenu);
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') {
+      if (state.running) togglePause();
+    }
+  });
+  $('btn-save-my-name').addEventListener('click', () => {
+    const raw = $('lobby-my-name').value.trim();
+    const name = raw || '玩家';
+    if (isNameBanned(name)) {
+      const btn = $('btn-save-my-name');
+      btn.textContent = '含屏蔽词';
+      btn.disabled = true;
+      $('lobby-my-name').style.borderColor = '#ff6b6b';
+      setTimeout(() => {
+        btn.textContent = '保存';
+        btn.disabled = false;
+        $('lobby-my-name').style.borderColor = '';
+      }, 1200);
+      return;
+    }
+    net.myName = name;
+    $('lobby-my-name').value = name;
+    updateLobbyPlayers();
+    updateNetHUD();
+    if (net.connected) {
+      sendNet({ type: 'hello', name: net.myName });
+    }
+    const btn = $('btn-save-my-name');
+    btn.textContent = '已保存 ✓';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = '保存';
+      btn.disabled = false;
+    }, 1000);
+  });
+  $('lobby-my-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('btn-save-my-name').click();
+  });
+  $('btn-random-match').addEventListener('click', startRandomMatch);
+  $('btn-create-room').addEventListener('click', createRoom);
+  $('btn-join-room').addEventListener('click', joinRoom);
+  $('btn-cancel-match').addEventListener('click', () => {
+    stopRandomMatch(false);
+  });
+  $('btn-lobby-back').addEventListener('click', () => {
+    stopRandomMatch(true);
+    cleanupNet();
+    showScreen('menu');
+  });
+  $('join-code-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') joinRoom();
+  });
+  $('join-code-input').addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+  });
+  $('btn-copy-code').addEventListener('click', () => {
+    const code = $('room-code').textContent;
+    if (!code || code === '----') return;
+    const done = () => {
+      const btn = $('btn-copy-code');
+      btn.textContent = '已复制 ✓';
+      setTimeout(() => { btn.textContent = '复制房间码'; }, 1000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        ta.remove();
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      ta.remove();
+    }
+  });
+  $('btn-net-start').addEventListener('click', hostStartNetGame);
+  $('btn-net-leave').addEventListener('click', () => {
+    sendNet({ type: 'leave' });
+    cleanupNet();
+    showLobbyActions();
+    hideRoomCode();
+    setLobbyControlsEnabled(true);
+    setLobbyStatus('已离开房间', '');
+    updateLobbyPlayers();
+  });
+  $('btn-net-borrow').addEventListener('pointerdown', netBorrowLife);
+  $('btn-net-home').addEventListener('click', netExitToLobby);
+  $('btn-net-again').addEventListener('click', () => {
+    if (!net.isHost) return;
+    sendNet({ type: 'start' });
+    startNetCountdown();
+  });
+  let authorClicks = 0;
+  let authorTimer = null;
+  el.authorCredit.addEventListener('click', () => {
+    authorClicks++;
+    el.authorCredit.classList.add('tap');
+    setTimeout(() => el.authorCredit.classList.remove('tap'), 120);
+    clearTimeout(authorTimer);
+    authorTimer = setTimeout(() => { authorClicks = 0; }, 3000);
+    if (authorClicks >= 7) {
+      authorClicks = 0;
+      clearTimeout(authorTimer);
+      el.devCodeInput.value = '';
+      el.devError.textContent = '';
+      openModal(el.modalDev);
+      setTimeout(() => el.devCodeInput.focus(), 320);
+    }
+  });
+  $('btn-dev-confirm').addEventListener('click', checkDevCode);
+  el.devCodeInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkDevCode();
+  });
+  $('btn-dev-cancel').addEventListener('click', () => closeModal(el.modalDev));
+  function checkDevCode() {
+    const code = el.devCodeInput.value.trim();
+    if (code === DEV_CODE) {
+      setDevMode(true);
+      closeModal(el.modalDev);
+      closeModal(el.modalAbout);
+      el.aiNameInput.value = state.aiName;
+      openModal(el.modalDevPanel);
+      syncNames();
+    } else {
+      el.devError.textContent = '设置码错误，请重试';
+      el.devCodeInput.value = '';
+      el.devCodeInput.focus();
+      el.devCodeInput.style.borderColor = '#ff6b6b';
+      setTimeout(() => { el.devCodeInput.style.borderColor = ''; }, 600);
+    }
+  }
+  $('btn-devpanel-save').addEventListener('click', () => {
+    const raw = el.aiNameInput.value.trim();
+    const name = raw || 'AI人';
+    if (isNameBanned(name)) {
+      const btn = $('btn-devpanel-save');
+      btn.textContent = '含屏蔽词';
+      btn.disabled = true;
+      el.aiNameInput.style.borderColor = '#ff6b6b';
+      setTimeout(() => {
+        btn.textContent = '保存';
+        btn.disabled = false;
+        el.aiNameInput.style.borderColor = '';
+      }, 1200);
+      return;
+    }
+    state.aiName = name;
+    syncNames();
+    closeModal(el.modalDevPanel);
+  });
+  $('btn-devpanel-close').addEventListener('click', () => closeModal(el.modalDevPanel));
+  $('btn-dev-off').addEventListener('click', () => {
+    setDevMode(false);
+    closeModal(el.modalDevPanel);
+  });
+  syncNames();
+  updateHUD();
+  updateLobbyPlayers();
+  applyOppDevLock(false);
+})();
+</script>
+</body>
+</html>
